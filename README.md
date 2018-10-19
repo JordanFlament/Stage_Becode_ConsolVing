@@ -75,3 +75,4 @@ Mise en place de l'index.
  * Obligation de mettre un password un minimum complexe.
  * Hashage de password.
  * Possibilité d'upload des fichiers et/ou de les échanger avec les autres utilisateurs.
+ * Edité son profil (nom, photo, bio? etc ...)
