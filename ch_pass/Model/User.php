@@ -1,8 +1,10 @@
 <?php
+namespace Model;
 
-include_once "../Controller/DBconnexion.php"; // Inclusion du fichier DBconnexion.php afin de profité de ses variables et fonctions.
-include_once "../Controller/Controller.php";  // Inclusion du fichier Controller.php afin de profité de ses variables et fonctions.
-include_once "../View/View.php";    // Inclusion du fichier View.php afin de profité de ses fonctions.
+use Controller\DBconnexion; // Inclusion du fichier DBconnexion.php afin de profité de ses variables et fonctions.
+use Controller\Controller;  // Inclusion du fichier Controller.php afin de profité de ses variables et fonctions.
+use View\View;    // Inclusion du fichier View.php afin de profité de ses fonctions.
+use PDO;
 
 class User{
 
@@ -68,8 +70,8 @@ class User{
                     }else{  // Sinon ...
                         echo "Vous ne pouvez pas mettre le même mot de passe. La sécurité avant tout !";    // Afficher message d'erreur.
                     }
-                }else{
-                    echo Controller::ERROR_PASS;
+                }else{  // Sinon ...
+                    echo Controller::ERROR_PASS;    // Retourne erreur.
                 }
             }else{  // Sinon ....
                 echo Controller::ERROR_INE;   // Retourne erreur.
@@ -103,7 +105,7 @@ class User{
         if($instance != null){  // Si connexion possible ....
             $instance->setQuery($req);  // Préparation de la requête.
             $instance->execQuery(array($_GET["id"]));   // Exécution de la requête.
-        }else{  // Sinon ...
+        }elseif($instance == null){  // Sinon ...
             echo Controller::ERROR_DB;    // Retourne erreur.
         }
     }

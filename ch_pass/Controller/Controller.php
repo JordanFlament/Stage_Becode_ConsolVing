@@ -1,8 +1,12 @@
 <?php
+namespace Controller;
 
-include_once "Controller/DBconnexion.php"; // Inclusion du fichier de DBconnexion.php pour se servir de ses variables et fonctions.
-include_once "Model/User.php";    // Inclusion du fichier de User.php pour se servir de ses variables et fonctions.
-include_once "../index.php";   // Inclusion du fichier de index.php pour se servir de ses variables et fonctions.
+use Controller\DBconnexion; // Inclusion du fichier de DBconnexion.php pour se servir de ses variables et fonctions.
+use Model\User;    // Inclusion du fichier de User.php pour se servir de ses variables et fonctions.
+use PDO;
+
+include_once "index.php";   // Inclusion du fichier de index.php pour se servir de ses variables et fonctions.
+
 
 class Controller {
 
@@ -108,22 +112,42 @@ class Controller {
         }
     }
 
-    public function underForm($user){   // Fonction vérifiant les actions dans l'espaces utilisateur.
+    public function underPass($user){   // Fonction vérifiant si l'utilisateur change de password
         if(isset($_POST["oldpass"]) && !empty($_POST["oldpass"]) && isset($_POST["newpass"]) && !empty($_POST["newpass"]) && isset($_POST["confnewpass"]) && !empty($_POST["confnewpass"]) && $_POST["newpass"] == $_POST["confnewpass"] && isset($_POST["conf"])){
             // Si toutes les conditions sont respecté ...
             $user->updateUser($user->getNewPass()); // Mettre à jour le mot de pass de l'utilisateur.
         }elseif(isset($_POST["oldpass"]) && !empty($_POST["oldpass"]) && isset($_POST["newpass"]) && !empty($_POST["newpass"]) && isset($_POST["confnewpass"]) && !empty($_POST["confnewpass"]) && $_POST["newpass"] != $_POST["confnewpass"] && isset($_POST["conf"])){
             // Sinon si les conditions sont mal respecté ....
             echo "Les mots de passes ne sont pas identique";    // Retourne message d'erreur spécifique.
-        }elseif(isset($_POST["passdelete"]) && !empty($_POST["passdelete"]) && isset($_POST["confdel"])) {   // Et sinon si, l'utilisateur remplis le formulaire de suppression de compte ...
-            if($user['pass'] == $_POST['passdelete']){
-                $user->removeUser($user->getMail());    // Appeller la fonction qui se chargera de supprimer l'utilisateur de la DB.
-                $this->redirectionSpace();
-            }elseif($user['pass'] != $_POST['passdelete']){
-                echo Controller::ERROR_PASS;
-            }else{
-                echo Controller::NO_DIF;
+        }
+    }
+    
+    public function underDelete($user){ // Fonction utilisé pour supprimer l'utilisateur courant.
+        if(isset($_POST["passdelete"]) && !empty($_POST["passdelete"]) && isset($_POST["confdel"])) {   // Si l'utilisateur remplis le formulaire de suppression de compte ...
+            $req = "SELECT * FROM user WHERE id = ?";   // Requête de sélection.
+            $instance = DBconnexion::getInstance(); // Connexion à la DB.
+            if($instance != null){  // Si la connexion est possible...
+                $instance->setQuery($req);  // Préparer la requête.
+                $instance->execQuery(array($_SESSION['id']));   // Exécuté la requête.
+                $result = $instance->rCount();  // Compter le nombre de résultat renvoyé par la requête.
+                if($result == 1){   // Si le résultat est égal à un...
+                    $info = $instance->load();  // Chargé les information relative au résultat.
+                    if($info["pass"] == $_POST["passdelete"]){  // Si le password renvoyé par la requête est égal au password entré dans le champ...
+                        $user->removeUser($user->getMail());    // Appeller la fonction qui se chargera de supprimer l'utilisateur de la DB.
+                        $this->redirectionSpace();  // Redirection vers la page d'acceuille.
+                    }elseif($info["pass"] != $_POST["passdelete"]){ // Si le password est différents de celui contenu dans la DB.
+                        echo self::ERROR_PASS;    // Retourne erreur.
+                    }else{  // Sinon ...
+                        echo self::NO_DIF;    // Retourne erreur.
+                    }
+                }else{  // Sinon ...
+                    echo self::ERROR_INE; // Retourne erreur.
+                }
+            }else{  // Sinon ...
+                echo self::ERROR_DB; // Retourne erreur.
             }
+        }else{ // Sinon ...
+            echo self::ERROR_PASS;    // Retourne erreur.
         }
     }
 
@@ -131,7 +155,40 @@ class Controller {
         session_start();    // Ouverture de la session pour l'écraser après et évité de laissé une session fantôme.
         $_SESSION = array();    // Spécifie que la session sera désormais vide.
         session_destroy();  // Destruction de la session.
-        header('Location: .');  // Redirection à la page d'acceuille.
+        header("Location: .");  // Redirection à la page d'acceuille.
+    }
+    
+    public function verifforgot(){  // Fonction de récupération de password.
+        if(isset($_POST["mailforgotpass"]) && !empty($_POST["mailforgotpass"]) && isset($_POST["confforgot"])){ // Si le formulaire est remplis...
+            $req = "SELECT * FROM user WHERE email = ?";    // Requête.
+            $instance = DBconnexion::getInstance(); // connexion DB.
+            if($instance != null){  // Si connexion possible...
+                $instance->setQuery($req);  // Préparer la requête.
+                $instance->execQuery(array($_POST["mailforgotpass"]));  // Exécuté la requête.
+                $result = $instance->rCount();  // Compté le nombre de résultat renvoyé par la requête.
+                if($result == 1){   // Si le résultat est égal à un ...
+                    $info = $instance->load();  // Chargé les infos relative au résultat.
+                    $mail_To = $info["email"];  // Définition du destinataire du mail.
+                    $mail_Subject =  "Mot de pass perdu ?"; // Sujet du mail.
+                    $headers = "From: Space User\n";    // Définition des différents headers ....
+                    $headers .= "MIME-Version: 1.0\r\n";
+                    $headers .= "Content-Transfer-Encoding: 8bit\n";
+                    $headers .= "Content-type: text/html; charset=utf-8\n";
+                    $mail_Body = "Bonjour, il semblerais que vous aillez perdu vos accès au Space User\n"."<br/>Voici vos identifiants ;<br/>Email : ".$info["email"]."<br/>Password : ".$info["pass"]; // Contenu du message à envoyé.
+                    if(mail($mail_To, $mail_Subject, $mail_Body, $headers)){ // Si les conditions du mail à envoyé sont respecté ....
+                        $_SESSION["message"] = "Message envoyé.";   // Envoyer le mail.
+                        unset($_POST);  // Ecrasé les données post.
+                    } else {    // Sinon ...
+                        $_SESSION["erreur"] = "bug complet";    // Retourne erreur.
+                    }
+                    header("Location: .");  // Redirection index.
+                }else{  // Sinon ...
+                    echo self::ERROR_INE; // Retourne erreur.
+                }
+            }else{  // Sinon ...
+                echo self::ERROR_DB;    // Retourne erreur.
+            }  
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 <?php
+namespace View;
 
-include_once "../Model/User.php";    // Inclusion du fichier User.php pour pouvoir se servir de ses varaibles et fonction, plus tard.
+use Model\User;    // Inclusion du fichier User.php pour pouvoir se servir de ses varaibles et fonction, plus tard.
 
 class View{
 
@@ -8,7 +9,7 @@ class View{
         echo "<html>";
         echo "<head>";
         echo "<meta charset=UTF-8>";
-        echo "<title>Change Pass</title>";
+        echo "<title>Space User</title>";
         echo "</head>";
         echo "<body>";
     }
@@ -21,11 +22,12 @@ class View{
     public function formulaireco(){ // Formulaire de connexion et inscription.
         echo "<table>";
         echo "<form action='' method='POST' autocomplete='off' name='formulaire'>";
-        echo "<tr></tr><td><input type='text' name='formmail' placeholder='ID' value='' maxlenght='15' utocomplete='off'></td>";
+        echo "<tr></tr><td><input type='email' name='formmail' placeholder='ID' value='' maxlenght='15' utocomplete='off'></td>";
         echo "<tr></tr><td><input type='password' name='formpass' placeholder='Password' value='' maxlength='20' utocomplete='off'></td>";
         echo "<tr></tr><td><input type='submit' name='formsub' value='Create'></td>";
         echo "<tr></tr><td><input type='submit' name='formuse' value='Use'></td>";
-        echo "</form>";
+        echo "<tr></tr><td><p><a href='?forgot=1'>Forgot password ?</a></p></td>";
+        echo "</form>"; 
         echo "</table>";
     }
 
@@ -49,6 +51,16 @@ class View{
         echo "<tr></tr><td><input type='password' name='confnewpass' placeholder='Confirmation' value='' maxlength='20' autocomplete='off'></td>";
         echo "<tr></tr><td><input type='submit' name='conf' value='Valider'></td>";
         echo "</table>";
+        echo "</form>";
+        echo "</fieldset>";
+    }
+    
+    
+    public function forgotpass(){
+        echo "<fieldset><legend>Qui êtes vous ?</legend>";
+        echo "<form action='' method='POST'>";
+        echo "<input type='email' name='mailforgotpass' placeholder='Votre email' value=''>";
+        echo "<input type='submit' name='confforgot' value='Récupéré votre mot de pass par email'>";
         echo "</form>";
         echo "</fieldset>";
     }

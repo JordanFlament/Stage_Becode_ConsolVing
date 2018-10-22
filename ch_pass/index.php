@@ -1,22 +1,35 @@
 <?php
 
-function classe($classe){   // Initialisation de la fonction permettant d'appeller les autres classes.
-    include $classe.".php";
-}
+class Autoloader{
+    
+    static function register(){ // Apelle de la fonction d'appel de classes.
+        spl_autoload_register(array(__CLASS__, "autoload"));
+    }
+    
+    static function autoload($class){ // Initialisation de la fonction permettant d'appeller les autres classes.
+        $class = str_replace("\\", "/", $class);
+        require $class.".php";
+    }
+} 
 
-spl_autoload_register("classe");   // Apelle de la fonction d'appel de classes.
+Autoloader::register();
 
 session_start();    // Ouverture de la session qui nous servira plus tard en fonction des respects de conditions.
 
-$html = new View/View;   // Appelle de la classe View.php.
-$cont = new Controller; // Appelle de la classe Controller.php.
-$user = new User();  // Appelle de la classe User.php.
+$html = new View\View;   // Appelle de la classe View.php.
+$cont = new Controller\Controller; // Appelle de la classe Controller.php.
+$user = new Model\User();  // Appelle de la classe User.php.
 
 if(isset($_GET["deco"])){   // Si une fois connecté, l'utilisateur clique sur le lien de déconnexion ...
     session_start();    // Ouverture de la session utilisé.
     $_SESSION = array();    // Définition de la session sur rien d'autre que du vide.
     session_destroy();  // Destruction de la session en cour.
     header("Location: .");  // Redirection à la page d'acceuille.
+}
+
+if(isset($_GET["forgot"])){ // S'il à perdu son password...
+    $html->forgotpass();    // Afficher le formulaire de mot de pass perdu.
+    $cont->verifforgot(); // Vérifie si l'utilisateur exite bien et dans ce cas, lui envoyer un mail avec ses identifiants.
 }
 
 $html->head();  // Mise en place de la tête html.
@@ -28,8 +41,9 @@ $html->head();  // Mise en place de la tête html.
         $cont->getList();   // Fonction qui liste les utilisateurs existant.
         $html->getListp3(); // Affichage de la partie 3 de la liste.
         $html->spaceUser($user); // Affichage de l'espace utilisateur.
+        $cont->underDelete($user); // Fonction qui vérifie si l'utilisateur supprime son compte.
         $html->chmp();  // Affichage du formulaire de changement de password.
-        $cont->underForm($user); // Fonction qui vérifie les actions des utlisateurs et agit en concéquence.
+        $cont->underPass($user); // Fonction qui vérifie si l'utilisateur à changer de password.
     }else{ // S'il n'y a pas de session en cour ....
         $html->formulaireco(); // Affichage du formulaire d'inscription / connexion.
         if(!empty($_POST["formmail"]) && !empty($_POST["formpass"])){   // Si les champs sont remplis...
