@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le :  ven. 19 oct. 2018 à 11:52
+-- Généré le :  mar. 23 oct. 2018 à 21:11
 -- Version du serveur :  10.1.36-MariaDB
 -- Version de PHP :  7.2.10
 
@@ -31,7 +31,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `user` (
   `id` int(5) NOT NULL,
   `email` varchar(50) NOT NULL,
-  `pass` varchar(20) NOT NULL
+  `pass` varchar(60) NOT NULL,
+  `admin` int(1) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -52,7 +53,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT pour la table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

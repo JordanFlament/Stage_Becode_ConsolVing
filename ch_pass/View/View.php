@@ -1,5 +1,6 @@
 <?php
-namespace View;
+
+namespace View; // Namespace pour le chemin des fichiers dans la structure mvc.
 
 use Model\User;    // Inclusion du fichier User.php pour pouvoir se servir de ses varaibles et fonction, plus tard.
 
@@ -26,7 +27,6 @@ class View{
         echo "<tr></tr><td><input type='password' name='formpass' placeholder='Password' value='' maxlength='20' utocomplete='off'></td>";
         echo "<tr></tr><td><input type='submit' name='formsub' value='Create'></td>";
         echo "<tr></tr><td><input type='submit' name='formuse' value='Use'></td>";
-        echo "<tr></tr><td><p><a href='?forgot=1'>Forgot password ?</a></p></td>";
         echo "</form>"; 
         echo "</table>";
     }
@@ -55,17 +55,6 @@ class View{
         echo "</fieldset>";
     }
     
-    
-    public function forgotpass(){
-        echo "<fieldset><legend>Qui êtes vous ?</legend>";
-        echo "<form action='' method='POST'>";
-        echo "<input type='email' name='mailforgotpass' placeholder='Votre email' value=''>";
-        echo "<input type='submit' name='confforgot' value='Récupéré votre mot de pass par email'>";
-        echo "</form>";
-        echo "</fieldset>";
-    }
-    
-        
     public function getListp1(){    // Partie 1 de la section de list des utilisateurs.
         echo "<fieldset><legend>Nombre d'utilisateurs existants : ";
     }
@@ -79,6 +68,13 @@ class View{
     public function getListp3(){    // Partie 3 de la section de list des utilisateurs.
         echo "</ul>";
         echo "</fieldset>";
+    }
+    
+    public function deleteOtherUser(){
+        echo "<form action='' method='POST'>";
+        echo "<input type='email' name='emaildeleting' placeholder='Email de la personne à supprimer' value=''>";
+        echo "<input type='submit' name='confdeleting' value='Supprimer'>";
+        echo "</form>";
     }
 
     public function bodysaf(){  // Fin de la partie d'emphase du body.

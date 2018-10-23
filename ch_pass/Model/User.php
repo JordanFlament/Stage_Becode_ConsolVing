@@ -1,10 +1,10 @@
 <?php
-namespace Model;
+namespace Model;    // Namespace pour le chemin des fichiers dans la structure mvc.
 
 use Controller\DBconnexion; // Inclusion du fichier DBconnexion.php afin de profité de ses variables et fonctions.
 use Controller\Controller;  // Inclusion du fichier Controller.php afin de profité de ses variables et fonctions.
 use View\View;    // Inclusion du fichier View.php afin de profité de ses fonctions.
-use PDO;
+use PDO;    // Inclusion de la methode PDO.
 
 class User{
 
@@ -36,14 +36,16 @@ class User{
         $this->_newpass = $newpass;  
     }
     
+   
+    
     public function addUser($mail, $pass){  // Fonction d'ajout de nouvel utilisateur
-        $req = "INSERT INTO user(email, pass) VALUES (?,?)"; // Requête d'insertion
+        $req = "INSERT INTO user(email, pass, admin) VALUES (?,?,0)"; // Requête d'insertion
         $instance = DBconnexion::getInstance(); // Connexion à la DB.
         if($instance != null){ // Si connexion possible ...
             $instance->setQuery($req); // Préparer la requête.
             $instance->bindVal(":email", $mail, PDO::PARAM_STR); // Trouver la colonne à inséré ainsi que la valeur mail à envoyer. 
             $instance->bindVal(":pass", $pass, PDO::PARAM_STR); // trouver la colonne à inséré ainsi que la valeur pass à envoyer, 
-            $instance->execQuery(array($mail, $pass)); // executer la requête
+            $instance->execQuery(array(self::getMail(), Controller::hashpass_E())); // executer la requête
         }else{  // Sinon ...
             echo Controller::ERROR_DB;    // Retourne erreur.
         } 
@@ -60,12 +62,12 @@ class User{
                 $info = $instance->load();  // Mettre les données relative du résultat dans une variable.
                 $password = $info["pass"];  // Récupéré le pass renvoyé par la DB.
                 $newpass = $_POST["newpass"];   // Mettre le résultat de new pass dans une variable.
-                if($password == $_POST['oldpass']){
-                    if($newpass != $password){  // Comparer les deux mots de passe. S'il sont différents, alors ....
+                if(password_verify($_POST["oldpass"], $password)){
+                    if(Controller::hashpassCP_B() != $password){  // Comparer les deux mots de passe. S'il sont différents, alors ...
                         $req2 = "UPDATE user SET pass = ? WHERE email = ?"; // Création de la deuxiemme requête pour mettre à jour le pass.
                         $instance->setQuery($req2); // Préparation de la deuxièmme requête.
                         $instance->bindVal(":pass", $newpass, PDO::PARAM_STR);  // Trouver la colonne à inséré, ainsi que la valeur à ajouté.
-                        $instance->execQuery(array($newpass, $info["email"]));  // Exécuté la requête.
+                        $instance->execQuery(array(Controller::hashpassCP_B(), $info["email"]));  // Exécuté la requête.
                         echo "Votre mot de passe à bien été changé!";   // Afficher un message de confirmation.
                     }else{  // Sinon ...
                         echo "Vous ne pouvez pas mettre le même mot de passe. La sécurité avant tout !";    // Afficher message d'erreur.
@@ -105,8 +107,17 @@ class User{
         if($instance != null){  // Si connexion possible ....
             $instance->setQuery($req);  // Préparation de la requête.
             $instance->execQuery(array($_GET["id"]));   // Exécution de la requête.
-        }elseif($instance == null){  // Sinon ...
+        }else{  // Sinon ...
             echo Controller::ERROR_DB;    // Retourne erreur.
+        }
+    }
+    
+    public function rmOtherUser(){
+        $req = "DELETE FROM user WHERE email = ?";
+        $instance = DBconnexion::getInstance();
+        if($instance != null){
+            $instance->setQuery($req);
+            $instance->execQuery(array($_POST["emaildeleting"]));
         }
     }
     

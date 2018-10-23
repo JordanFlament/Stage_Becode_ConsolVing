@@ -1,9 +1,10 @@
 <?php
-namespace Controller;
+namespace Controller;   // Namespace pour le chemin des fichiers dans la structure mvc.
 
 use Controller\DBconnexion; // Inclusion du fichier de DBconnexion.php pour se servir de ses variables et fonctions.
 use Model\User;    // Inclusion du fichier de User.php pour se servir de ses variables et fonctions.
-use PDO;
+use View\View; // Inclusion du fichier de View.php pour se servir de ses variables et fonctions.
+use PDO;    // Inclusion de la methode PDO.
 
 include_once "index.php";   // Inclusion du fichier de index.php pour se servir de ses variables et fonctions.
 
@@ -19,12 +20,6 @@ class Controller {
     const OK_ADD = "Votre compte va être ajouté, veuillez entré vos informations pour pouvoir vous connecté.";
     const ERROR_DB = "Erreur de connexion à la DB.";
     const NO_DIF = "Les valeurs entré sont incorrect car vous ne respectez pas les conditions.";
-
-    public function verifId($id){   // à voir l'utilité.
-        if(!is_int($id)){
-            trigger_error(self::ERROR_ID, E_USER_WARNING);
-        }
-    }
 
     public function verifMail($mail){   // Fonction vérifiant la conformité des entrées.
         if(!is_string($mail)){  // Si ce n'est pas une chaine de charactère ...
@@ -61,16 +56,20 @@ class Controller {
     }
 
     public function existUser($user){   // Fonction vérifiant la possibilité de se connecté à l'espace utilisateur.
-        $req = "SELECT * FROM user WHERE email = ? AND pass = ?";   // Requête.
+        $req = "SELECT * FROM user WHERE email = ?";   // Requête.
         $instance = DBconnexion::getInstance(); // Vérifie que la connexion à la DB est réalisable.
         if($instance != null){   // Si oui ...
             $instance->setQuery($req);  // Prépare la requête.
-            $instance->execQuery(array($user->getMail(), $user->getPass()));    // Exécute la requête.
+            $instance->execQuery(array($user->getMail()));    // Exécute la requête.
             $results = $instance->rCount(); // Compté le nombre de résultat et le mettre dans une variable.
             if($results == 1){  // Si le résultat est égal à un ...
                 $infouser = $instance->load();  // Chargé les données relative à l'utilisateur sélectionné grâce à la requête.
-                $_SESSION["id"] = $infouser["id"];  // Définir la session à ouvrir sous l'id renvoyé par le chargement des info de l'utilisateur séléctionné.
-                header("Location: index.php?id=" . $_SESSION["id"]);  // Redirection au point de départs qui affichera un menu différent étant donné la session commencé.
+                if(password_verify($_POST["formpass"], $infouser["pass"])){
+                    $_SESSION["id"] = $infouser["id"];  // Définir la session à ouvrir sous l'id renvoyé par le chargement des info de l'utilisateur séléctionné.
+                    header("Location: index.php?id=" . $_SESSION["id"]);  // Redirection au point de départs qui affichera un menu différent étant donné la session commencé.
+                }else{
+                    echo Controller::ERROR_PASS;
+                }
             }else{  // Sinon ...
                 echo self::ERROR_INE; // Retourne erreur.
             }
@@ -89,6 +88,28 @@ class Controller {
             echo $results;  // Affiche le résultat.
         }else{  //Sinon ...
             echo self::ERROR_DB;  // Retourne l'erreur.
+        }
+    }
+    
+    public function getType(){  // Fonction qui vérifiera le type d'utilisateur avant d'afficher les lists.
+        $req = "SELECT * FROM user WHERE id = ?";   // Requête.
+        $instance = DBconnexion::getInstance(); // Connexion à la DB.
+        if($instance != null){  // Si connexion possible ...
+            $instance->setQuery($req);  // Préparer la requête.
+            $instance->execQuery(array($_SESSION['id']));   // Exécuté la requête.
+            $result = $instance->rCount();   // Compter le nombre de résultats renvoyé par la requête.
+            if($result == 1){ // Si la requête renvoie qu'un utilisateur existe bien...
+                $info = $instance->load();  // Charge les info relative à l'utilisateur sélectionné par la requête.
+                if($info["admin"] == 1){    // Si la colonne admin de la db renvoie 1 ...
+                    $this->getListAdmin();  // Afficher la liste en vue administrateur.
+                }else{  // Sinon ...
+                    $this->getList();   // Afficher la liste normal.
+                }
+            }else{  // Sinon ...
+                echo self::ERROR_ID;    // Retourne erreur.
+            }
+        }else{  // Sinon....
+            echo self::ERROR_DB; // Retourne erreur.
         }
     }
 
@@ -112,6 +133,27 @@ class Controller {
         }
     }
 
+     public function getListAdmin(){  // Fonction renvoyant une liste des utilisateurs.
+        $req = "SELECT * FROM user";   // Requête.
+        $instance = DBconnexion::getInstance(); // Vérifie que la connexion à la DB est réalisable.
+        if($instance != null){   // Si oui ...
+            $instance->setQuery($req);  // Prépare la requête.
+            $instance->exec();  // Exécute la requête.
+            $results = $instance->getResultsL();    // Mettre le résultat du SELECT dans une variable.
+            if($results <= 1){   // S'il y a au moins un résultat ...
+                while($results){    // Tant qu'il y à des utilisateurs ...
+                    echo "<li>".$results."</li>";   // Afficher le résultat entre deux balises.
+                    $results = $instance->getResultsL();    // Mettre le résultat du SELECT dans une variable.
+                }
+                echo View::deleteOtherUser();
+            }else{  // Sinon ...
+                echo "Vous êtes un admin seul dans ce monde!";   // Afficher un message.
+            }
+        }else{  // Sinon ...
+            echo self::ERROR_DB;  // Retourne erreur.
+        }
+    }
+    
     public function underPass($user){   // Fonction vérifiant si l'utilisateur change de password
         if(isset($_POST["oldpass"]) && !empty($_POST["oldpass"]) && isset($_POST["newpass"]) && !empty($_POST["newpass"]) && isset($_POST["confnewpass"]) && !empty($_POST["confnewpass"]) && $_POST["newpass"] == $_POST["confnewpass"] && isset($_POST["conf"])){
             // Si toutes les conditions sont respecté ...
@@ -132,10 +174,10 @@ class Controller {
                 $result = $instance->rCount();  // Compter le nombre de résultat renvoyé par la requête.
                 if($result == 1){   // Si le résultat est égal à un...
                     $info = $instance->load();  // Chargé les information relative au résultat.
-                    if($info["pass"] == $_POST["passdelete"]){  // Si le password renvoyé par la requête est égal au password entré dans le champ...
+                    if(password_verify($_POST["passdelete"], $info["pass"]) == true){  // Si le password renvoyé par la requête est égal au password entré dans le champ...
                         $user->removeUser($user->getMail());    // Appeller la fonction qui se chargera de supprimer l'utilisateur de la DB.
                         $this->redirectionSpace();  // Redirection vers la page d'acceuille.
-                    }elseif($info["pass"] != $_POST["passdelete"]){ // Si le password est différents de celui contenu dans la DB.
+                    }elseif(password_verify($_POST["passdelete"], $info["pass"]) == false){ // Si le password est différents de celui contenu dans la DB.
                         echo self::ERROR_PASS;    // Retourne erreur.
                     }else{  // Sinon ...
                         echo self::NO_DIF;    // Retourne erreur.
@@ -146,8 +188,6 @@ class Controller {
             }else{  // Sinon ...
                 echo self::ERROR_DB; // Retourne erreur.
             }
-        }else{ // Sinon ...
-            echo self::ERROR_PASS;    // Retourne erreur.
         }
     }
 
@@ -157,40 +197,24 @@ class Controller {
         session_destroy();  // Destruction de la session.
         header("Location: .");  // Redirection à la page d'acceuille.
     }
-    
-    public function verifforgot(){  // Fonction de récupération de password.
-        if(isset($_POST["mailforgotpass"]) && !empty($_POST["mailforgotpass"]) && isset($_POST["confforgot"])){ // Si le formulaire est remplis...
-            $req = "SELECT * FROM user WHERE email = ?";    // Requête.
-            $instance = DBconnexion::getInstance(); // connexion DB.
-            if($instance != null){  // Si connexion possible...
-                $instance->setQuery($req);  // Préparer la requête.
-                $instance->execQuery(array($_POST["mailforgotpass"]));  // Exécuté la requête.
-                $result = $instance->rCount();  // Compté le nombre de résultat renvoyé par la requête.
-                if($result == 1){   // Si le résultat est égal à un ...
-                    $info = $instance->load();  // Chargé les infos relative au résultat.
-                    $mail_To = $info["email"];  // Définition du destinataire du mail.
-                    $mail_Subject =  "Mot de pass perdu ?"; // Sujet du mail.
-                    $headers = "From: Space User\n";    // Définition des différents headers ....
-                    $headers .= "MIME-Version: 1.0\r\n";
-                    $headers .= "Content-Transfer-Encoding: 8bit\n";
-                    $headers .= "Content-type: text/html; charset=utf-8\n";
-                    $mail_Body = "Bonjour, il semblerais que vous aillez perdu vos accès au Space User\n"."<br/>Voici vos identifiants ;<br/>Email : ".$info["email"]."<br/>Password : ".$info["pass"]; // Contenu du message à envoyé.
-                    if(mail($mail_To, $mail_Subject, $mail_Body, $headers)){ // Si les conditions du mail à envoyé sont respecté ....
-                        $_SESSION["message"] = "Message envoyé.";   // Envoyer le mail.
-                        unset($_POST);  // Ecrasé les données post.
-                    } else {    // Sinon ...
-                        $_SESSION["erreur"] = "bug complet";    // Retourne erreur.
-                    }
-                    header("Location: .");  // Redirection index.
-                }else{  // Sinon ...
-                    echo self::ERROR_INE; // Retourne erreur.
-                }
-            }else{  // Sinon ...
-                echo self::ERROR_DB;    // Retourne erreur.
-            }  
-        }
-    }
 
+    public function hashpass_E(){
+        $options = [ "cost" => 4,];
+        $password = password_hash($_POST["formpass"], PASSWORD_BCRYPT,$options);
+        return $password;
+    }
+    
+    public function hashpassCP_A(){
+        $options = [ "cost" => 4,];
+        $password = password_hash($_POST["odlpass"], PASSWORD_BCRYPT,$options);
+        return $password;
+    }
+    
+    public function hashpassCP_B(){
+        $options = [ "cost" => 4,];
+        $password = password_hash($_POST["newpass"], PASSWORD_BCRYPT,$options);
+        return $password;
+    }
 }
 
 ?>

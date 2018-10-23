@@ -1,6 +1,7 @@
 <?php
-namespace Controller;
-use PDO;
+namespace Controller;   // Namespace pour le chemin des fichiers dans la structure mvc.
+
+use PDO;    // Inclusion de la methode PDO à travers la structure MVC.
 
 class DBconnexion {
     
@@ -10,13 +11,14 @@ class DBconnexion {
     private $_statement = null; //Variable permettant de gérer les requêtes PDO (prÃ©paration, bindings, exécution)
     private $_query = null;	//la requête que l'utilistaeur souhaite exécuter
     
-    const DEFAULT_SQL_DBHOST = "localhost"; // Hébergement.
+    const DEFAULT_SQL_DBHOST = "127.0.0.1"; // Hébergement.
     const DEFAULT_SQL_DBNAME = "test";  // Nom de la DB.
+    const DEFAULT_CHARSET = "utf8";
     const DEFAULT_SQL_DBUSER = "root";  // Nom de l'utilisateur de la DB.
     const DEFAULt_SQL_DBPASS = "";  // Mot de pass de l'utilisateur de la DB. 
     
     private function __construct() { // Définition de la fonction de construction qui initialite la connection à la DB avec, en paramètre, les constantes défini au dessus.
-        $this->_dbConnexion = new PDO("mysql:host=".self::DEFAULT_SQL_DBHOST.";dbname=".self::DEFAULT_SQL_DBNAME,self::DEFAULT_SQL_DBUSER,self::DEFAULt_SQL_DBPASS);
+        $this->_dbConnexion = new PDO("mysql:host=".self::DEFAULT_SQL_DBHOST.";dbname=".self::DEFAULT_SQL_DBNAME.";charset=".self::DEFAULT_CHARSET,self::DEFAULT_SQL_DBUSER,self::DEFAULt_SQL_DBPASS);
         $this->_dbConnexion->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_WARNING); //Définition d'une attibution d'erreur en cas d'imprévu.
     }
     

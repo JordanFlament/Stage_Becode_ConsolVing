@@ -9,9 +9,9 @@ Mise en place de la DB.
  *  variable et constante
  *  un constructeur
  *  l'instantiation
- *  une fonction query
- *  une fonction execute
- *  une fonction bindvalue
+ *  fonction query
+ *  fonction execute
+ *  fonction bindvalue
 
 Mise en place du model.
 -----------------------
@@ -36,8 +36,7 @@ Mise en place du controller.
  *  function verif si l'adresse existe ou non et si l'adresse est conforme
  *  function verif si le mot de passe appartient bien à l'adresse et verifie si le mp est conforme
  *  verifie si les champs sont compatibles entre eux et avec la BD
- *  compte les usilisateur enregistré.
- *  
+ *  compte les usilisateur enregistré. 
 
 Mise en place de la vue.
 ------------------------
@@ -67,12 +66,3 @@ Mise en place de l'index.
  *  if use {
  *      verif user
  *  }
- 
- A rajouter, mais optionnel.
- ---------------------------
- 
- * Espace Administateur.
- * Obligation de mettre un password un minimum complexe.
- * Hashage de password.
- * Possibilité d'upload des fichiers et/ou de les échanger avec les autres utilisateurs.
- * Edité son profil (nom, photo, bio? etc ...)
